@@ -771,6 +771,44 @@ Query params:
 > **License**: Requests beyond `7d` require the Pulse Pro `long_term_metrics` feature. Unlicensed requests return `402 Payment Required`.
 > **Aliases**: `guest` (VM/LXC) and `docker` (Docker container) are accepted, but persistent store data uses the canonical types above.
 
+### Right-Sizing Analysis
+`GET /api/rightsizing`
+Returns a JSON right-sizing analysis for all running VMs and containers. Classifies each guest's CPU and memory utilization as idle, over-provisioned, right-sized, under-provisioned, mixed, or insufficient-data using P95 statistics.
+
+Query params:
+- `range` (optional): `1h`, `6h`, `24h`, `7d`, `14d`, `30d` (default `7d`)
+- `threshold_cpu_idle` (optional): CPU idle threshold, 0–100 (default 5)
+- `threshold_cpu_over` (optional): CPU over-provisioned threshold, 0–100 (default 30)
+- `threshold_cpu_under` (optional): CPU under-provisioned threshold, 0–100 (default 85)
+- `threshold_mem_idle` (optional): Memory idle threshold, 0–100 (default 10)
+- `threshold_mem_over` (optional): Memory over-provisioned threshold, 0–100 (default 30)
+- `threshold_mem_under` (optional): Memory under-provisioned threshold, 0–100 (default 90)
+
+Threshold ordering invariant: `idle < over < under` must hold for both CPU and memory.
+
+Response includes a `summary` object with fleet counts and reclaimable resources, plus a `guests` array with per-guest verdicts, P95/avg/max stats, and streak days.
+
+Response header `X-Compute-Time-Ms` reports analysis duration.
+
+> **License**: `14d` and `30d` ranges require the Pulse Pro `long_term_metrics` feature. Unlicensed requests return `402 Payment Required`.
+
+Example:
+```bash
+curl -H "X-API-Token: your-token" "http://localhost:7655/api/rightsizing?range=7d"
+```
+
+### Right-Sizing CSV Export
+`GET /api/rightsizing/export`
+Returns a CSV download of the right-sizing analysis. Supports the same query parameters as `/api/rightsizing`, including threshold overrides, so the export matches what the UI displays.
+
+Response headers set `Content-Type: text/csv` and `Content-Disposition: attachment; filename="right-sizing-<range>.csv"`.
+
+Example:
+```bash
+curl -H "X-API-Token: your-token" -o right-sizing.csv \
+  "http://localhost:7655/api/rightsizing/export?range=7d"
+```
+
 ---
 
 ## 🤖 Agent Endpoints

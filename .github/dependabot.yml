@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: go
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: go
+    directory: /client
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly

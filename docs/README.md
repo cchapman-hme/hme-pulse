@@ -53,6 +53,7 @@ Pulse Pro unlocks **Auto-Fix and advanced AI analysis** — **Pulse Patrol is av
 
 ## 📡 Monitoring & Agents
 
+- **[Right-Sizing Analysis](../docs/hme/pulse-rightsizing-pr/IMPLEMENTATION-PLAN.md)** – Deterministic P95-based VM and container right-sizing with fleet-level summary and CSV export.
 - **[Unified Agent](UNIFIED_AGENT.md)** – Single binary for host, Docker, and Kubernetes monitoring.
 - **[Centralized Agent Management (Pro)](CENTRALIZED_MANAGEMENT.md)** – Agent profiles and remote config.
 - **[Proxmox Backup Server](PBS.md)** – PBS integration, direct API vs PVE passthrough, token setup.

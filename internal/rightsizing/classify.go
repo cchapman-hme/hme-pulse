@@ -37,9 +37,9 @@ type Thresholds struct {
 	MemIdle    float64 // P95 Mem below this → idle (default: 10)
 	MemOver    float64 // P95 Mem below this → over-provisioned (default: 30)
 	MemUnder   float64 // P95 Mem above this → under-provisioned (default: 90)
-	MinSamples int // Minimum data points for a valid classification. Callers MUST check
-	               // len(points) >= MinSamples and return VerdictInsufficientData if not met.
-	               // ClassifyCPU and ClassifyMemory do not enforce this — they classify any input.
+	MinSamples int     // Minimum data points for a valid classification. Callers MUST check
+	// len(points) >= MinSamples and return VerdictInsufficientData if not met.
+	// ClassifyCPU and ClassifyMemory do not enforce this — they classify any input.
 }
 
 // DefaultThresholds returns sensible defaults for right-sizing classification.
