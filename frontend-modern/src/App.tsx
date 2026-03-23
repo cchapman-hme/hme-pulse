@@ -48,6 +48,7 @@ import SettingsIcon from 'lucide-solid/icons/settings';
 import NetworkIcon from 'lucide-solid/icons/network';
 import Maximize2Icon from 'lucide-solid/icons/maximize-2';
 import Minimize2Icon from 'lucide-solid/icons/minimize-2';
+import ScaleIcon from 'lucide-solid/icons/scale';
 import { PulsePatrolLogo } from '@/components/Brand/PulsePatrolLogo';
 import { TokenRevealDialog } from './components/TokenRevealDialog';
 import { useAlertsActivation } from './stores/alertsActivation';
@@ -88,6 +89,7 @@ const HostsOverview = lazy(() =>
 const AIIntelligencePage = lazy(() =>
   import('./pages/AIIntelligence').then((module) => ({ default: module.AIIntelligence })),
 );
+const RightSizingPage = lazy(() => import('./pages/RightSizing'));
 
 
 // Enhanced store type with proper typing
@@ -974,6 +976,7 @@ function App() {
 
       <Route path="/servers" component={() => <Navigate href="/hosts" />} />
       <Route path="/alerts/*" component={AlertsPage} />
+      <Route path="/rightsizing" component={RightSizingPage} />
       <Route path="/ai/*" component={AIIntelligencePage} />
       <Route path="/settings/*" component={SettingsRoute} />
     </Router>
@@ -1251,7 +1254,7 @@ function AppLayout(props: {
       scopes.includes('*') || scopes.includes('settings:read');
 
     const tabs: Array<{
-      id: 'alerts' | 'ai' | 'settings';
+      id: 'alerts' | 'rightsizing' | 'ai' | 'settings';
       label: string;
       route: string;
       tooltip: string;
@@ -1269,6 +1272,16 @@ function AppLayout(props: {
           count: activeAlertCount,
           breakdown,
           icon: <BellIcon class="w-4 h-4 shrink-0" />,
+        },
+        {
+          id: 'rightsizing',
+          label: 'Right-Sizing',
+          route: '/rightsizing',
+          tooltip: 'Analyze VM and container resource allocation',
+          badge: null,
+          count: undefined,
+          breakdown: undefined,
+          icon: <ScaleIcon class="w-4 h-4 shrink-0" />,
         },
         {
           id: 'ai',
