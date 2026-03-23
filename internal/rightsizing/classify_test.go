@@ -40,9 +40,13 @@ func TestComputeStats_KnownValues(t *testing.T) {
 }
 
 func TestComputeStats_UnsortedInput(t *testing.T) {
+	// sorted: [10, 30, 50, 70, 90]; P95 index = floor(0.95*4) = 3 → 70.0
 	s := ComputeStats([]float64{50, 10, 90, 30, 70})
 	if s.Max != 90.0 {
 		t.Fatalf("max: want 90.0, got %f", s.Max)
+	}
+	if s.P95 != 70.0 {
+		t.Fatalf("p95: want 70.0, got %f", s.P95)
 	}
 }
 
@@ -148,9 +152,10 @@ func TestClassifyOverall(t *testing.T) {
 }
 
 func TestClassifyOverall_Commutativity(t *testing.T) {
+	// Only valid CPU/memory input verdicts — VerdictMixed is an output only
 	verdicts := []Verdict{
 		VerdictIdle, VerdictOverProvisioned, VerdictRightSized,
-		VerdictUnderProvisioned, VerdictMixed, VerdictInsufficientData,
+		VerdictUnderProvisioned, VerdictInsufficientData,
 	}
 	for _, cpu := range verdicts {
 		for _, mem := range verdicts {
