@@ -90,8 +90,7 @@ var rangeConfigs = map[string]rangeConfig{
 
 // Analyze performs right-sizing analysis on all running, non-template guests in the
 // provided state snapshot. Templates are skipped because they are never actual workloads.
-// Returns ErrInvalidRange only if timeRange is completely unrecognised; an unknown range
-// falls back to "7d" to keep the caller simple.
+// Unrecognised timeRange values silently fall back to "7d".
 func Analyze(querier MetricsQuerier, state models.StateSnapshot, t Thresholds, timeRange string) (*Result, error) {
 	clockStart := time.Now()
 
