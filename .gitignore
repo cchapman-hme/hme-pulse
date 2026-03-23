@@ -216,3 +216,6 @@ BACKUP_SYSTEM.md
 test_output.txt
 coverage_summary.txt
 CHANGELOG-DRAFT.md
+
+# Git worktrees
+.worktrees/
