@@ -89,6 +89,10 @@ pulse-watchdog.log
 .mcp-servers/
 .mcp.json
 .codex/
+.github/instructions
+.github/skills
+.github/prompts
+
 
 # Release process files
 CHANGELOG.md
