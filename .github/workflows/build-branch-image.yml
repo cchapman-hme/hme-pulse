@@ -1,0 +1,73 @@
+name: Build Branch Image
+
+# Builds a Docker image from a feature branch and pushes to ghcr.io.
+# Usage: set PULSE_IMAGE=ghcr.io/cchapman-hme/pulse:<tag> in .env
+# then docker compose up to run the feature branch image.
+
+on:
+  push:
+    branches:
+      - feature/rightsizing
+  workflow_dispatch:
+    inputs:
+      tag_suffix:
+        description: 'Image tag suffix (default: branch name slug)'
+        required: false
+        type: string
+
+concurrency:
+  group: branch-image-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          # Use input tag if provided, otherwise slugify the branch name
+          if [ -n "${{ inputs.tag_suffix }}" ]; then
+            TAG="${{ inputs.tag_suffix }}"
+          else
+            TAG=$(echo "${{ github.ref_name }}" | sed 's|/|-|g' | tr '[:upper:]' '[:lower:]')
+          fi
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "sha_tag=${TAG}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "version=branch-${TAG}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Image tags: ${TAG}, ${TAG}-${SHORT_SHA}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runtime
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/pulse:${{ steps.meta.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/pulse:${{ steps.meta.outputs.sha_tag }}
