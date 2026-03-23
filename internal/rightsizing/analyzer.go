@@ -108,7 +108,8 @@ func Analyze(querier MetricsQuerier, state models.StateSnapshot, t Thresholds, t
 	// per guest, adding unnecessary SQLite load for no analytical value.
 	doStreak := rc.Duration >= 7*24*time.Hour
 
-	var guests []GuestResult
+	// Use an allocated (non-nil) slice so JSON always serialises as [] not null.
+	guests := make([]GuestResult, 0)
 
 	// Process VMs — skip stopped and templates.
 	for _, vm := range state.VMs {

@@ -34,7 +34,7 @@ export function GuestTable(props: GuestTableProps) {
   };
 
   const filtered = createMemo(() => {
-    let list = props.guests;
+    let list = props.guests ?? [];
     if (props.verdictFilter !== 'all') {
       list = list.filter(g => g.overall === props.verdictFilter);
     }
