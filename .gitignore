@@ -92,7 +92,8 @@ pulse-watchdog.log
 .github/instructions
 .github/skills
 .github/prompts
-
+.github/agent
+.github/commands
 
 # Release process files
 CHANGELOG.md
