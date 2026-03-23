@@ -57,6 +57,7 @@ func DefaultThresholds() Thresholds {
 
 // ValidateThresholds returns an error if the threshold ordering invariant is violated.
 // CPU and memory thresholds must each satisfy: idle < over < under.
+// MinSamples must be positive (≥ 1).
 func ValidateThresholds(t Thresholds) error {
 	if t.CPUIdle >= t.CPUOver {
 		return fmt.Errorf("rightsizing: CPUIdle (%.1f) must be less than CPUOver (%.1f)", t.CPUIdle, t.CPUOver)
@@ -70,6 +71,9 @@ func ValidateThresholds(t Thresholds) error {
 	if t.MemOver >= t.MemUnder {
 		return fmt.Errorf("rightsizing: MemOver (%.1f) must be less than MemUnder (%.1f)", t.MemOver, t.MemUnder)
 	}
+	if t.MinSamples < 1 {
+		return fmt.Errorf("rightsizing: MinSamples (%d) must be at least 1", t.MinSamples)
+	}
 	return nil
 }
 
@@ -81,13 +85,23 @@ type Stats struct {
 }
 
 // ComputeStats calculates average, P95, and max from a slice of values.
-// Returns zero Stats if values is empty.
+// Returns zero Stats if values is empty. NaN and Inf values are silently
+// filtered out before computation to guard against corrupt metric data.
 func ComputeStats(values []float64) Stats {
 	if len(values) == 0 {
 		return Stats{}
 	}
-	sorted := make([]float64, len(values))
-	copy(sorted, values)
+
+	// Filter out non-finite values (NaN, +Inf, -Inf) before sorting.
+	sorted := make([]float64, 0, len(values))
+	for _, v := range values {
+		if !math.IsNaN(v) && !math.IsInf(v, 0) {
+			sorted = append(sorted, v)
+		}
+	}
+	if len(sorted) == 0 {
+		return Stats{}
+	}
 	sort.Float64s(sorted)
 
 	sum := 0.0

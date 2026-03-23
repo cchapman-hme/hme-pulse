@@ -116,7 +116,7 @@ func Analyze(querier MetricsQuerier, state models.StateSnapshot, t Thresholds, t
 			continue
 		}
 		gr := analyzeGuest(querier, vm.ID, vm.Name, vm.Node, "vm", vm.VMID,
-			vm.CPUs, vm.Memory.Total, queryStart, end, rc.StepSecs, t, doStreak)
+			vm.CPUs, vm.Memory.Total, queryStart, end, rc.StepSecs, t, doStreak, end)
 		guests = append(guests, gr)
 	}
 
@@ -126,7 +126,7 @@ func Analyze(querier MetricsQuerier, state models.StateSnapshot, t Thresholds, t
 			continue
 		}
 		gr := analyzeGuest(querier, ct.ID, ct.Name, ct.Node, "container", ct.VMID,
-			ct.CPUs, ct.Memory.Total, queryStart, end, rc.StepSecs, t, doStreak)
+			ct.CPUs, ct.Memory.Total, queryStart, end, rc.StepSecs, t, doStreak, end)
 		guests = append(guests, gr)
 	}
 
@@ -203,6 +203,7 @@ func analyzeGuest(
 	stepSecs int64,
 	t Thresholds,
 	doStreak bool,
+	now time.Time,
 ) GuestResult {
 	gr := GuestResult{
 		ID:          id,
@@ -268,7 +269,7 @@ func analyzeGuest(
 
 	// Streak is gated by the caller; skip for short ranges to avoid 90-day lookback queries.
 	if doStreak {
-		gr.DaysAtVerdict = streakDays(querier, id, gr.Overall, t)
+		gr.DaysAtVerdict = streakDays(querier, id, gr.Overall, t, now)
 	}
 
 	return gr
@@ -277,12 +278,12 @@ func analyzeGuest(
 // streakDays counts consecutive recent days where the guest held the given verdict,
 // using daily (stepSecs=86400) metrics for the last 90 days.
 // Returns 0 when currentVerdict is VerdictInsufficientData or data is unavailable.
-func streakDays(querier MetricsQuerier, guestID string, currentVerdict Verdict, t Thresholds) int {
+func streakDays(querier MetricsQuerier, guestID string, currentVerdict Verdict, t Thresholds, now time.Time) int {
 	if currentVerdict == VerdictInsufficientData {
 		return 0
 	}
 
-	end := time.Now()
+	end := now
 	start := end.Add(-90 * 24 * time.Hour)
 
 	// One QueryAll call fetches both cpu and memory daily aggregates.

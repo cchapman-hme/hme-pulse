@@ -62,6 +62,24 @@ func TestComputeStats_DoesNotMutateInput(t *testing.T) {
 	}
 }
 
+func TestComputeStats_NaNAndInfFiltered(t *testing.T) {
+	s := ComputeStats([]float64{10, math.NaN(), 20, math.Inf(1), 30, math.Inf(-1)})
+	// Only 10, 20, 30 remain after filtering
+	if s.Max != 30.0 {
+		t.Fatalf("max: want 30.0, got %f", s.Max)
+	}
+	if math.Abs(s.Avg-20.0) > 0.01 {
+		t.Fatalf("avg: want 20.0, got %f", s.Avg)
+	}
+}
+
+func TestComputeStats_AllNaN(t *testing.T) {
+	s := ComputeStats([]float64{math.NaN(), math.NaN()})
+	if s.Avg != 0 || s.P95 != 0 || s.Max != 0 {
+		t.Fatalf("expected zero stats when all values are NaN, got %+v", s)
+	}
+}
+
 func TestClassifyCPU(t *testing.T) {
 	th := DefaultThresholds()
 	tests := []struct {
@@ -196,10 +214,12 @@ func TestValidateThresholds_Invalid(t *testing.T) {
 		name string
 		th   Thresholds
 	}{
-		{"CPUIdle >= CPUOver", Thresholds{CPUIdle: 30, CPUOver: 30, CPUUnder: 85, MemIdle: 10, MemOver: 30, MemUnder: 90}},
-		{"CPUOver >= CPUUnder", Thresholds{CPUIdle: 5, CPUOver: 85, CPUUnder: 85, MemIdle: 10, MemOver: 30, MemUnder: 90}},
-		{"MemIdle >= MemOver", Thresholds{CPUIdle: 5, CPUOver: 30, CPUUnder: 85, MemIdle: 30, MemOver: 30, MemUnder: 90}},
-		{"MemOver >= MemUnder", Thresholds{CPUIdle: 5, CPUOver: 30, CPUUnder: 85, MemIdle: 10, MemOver: 90, MemUnder: 90}},
+		{"CPUIdle >= CPUOver", Thresholds{CPUIdle: 30, CPUOver: 30, CPUUnder: 85, MemIdle: 10, MemOver: 30, MemUnder: 90, MinSamples: 10}},
+		{"CPUOver >= CPUUnder", Thresholds{CPUIdle: 5, CPUOver: 85, CPUUnder: 85, MemIdle: 10, MemOver: 30, MemUnder: 90, MinSamples: 10}},
+		{"MemIdle >= MemOver", Thresholds{CPUIdle: 5, CPUOver: 30, CPUUnder: 85, MemIdle: 30, MemOver: 30, MemUnder: 90, MinSamples: 10}},
+		{"MemOver >= MemUnder", Thresholds{CPUIdle: 5, CPUOver: 30, CPUUnder: 85, MemIdle: 10, MemOver: 90, MemUnder: 90, MinSamples: 10}},
+		{"MinSamples zero", Thresholds{CPUIdle: 5, CPUOver: 30, CPUUnder: 85, MemIdle: 10, MemOver: 30, MemUnder: 90, MinSamples: 0}},
+		{"MinSamples negative", Thresholds{CPUIdle: 5, CPUOver: 30, CPUUnder: 85, MemIdle: 10, MemOver: 30, MemUnder: 90, MinSamples: -1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
